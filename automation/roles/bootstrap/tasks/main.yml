@@ -1,0 +1,87 @@
+---
+############################################## SSH SETUP
+
+- name: Disable empty password login
+  lineinfile:
+    dest: "/etc/ssh/sshd_config"
+    regexp: '^#?PermitEmptyPasswords'
+    line: 'PermitEmptyPasswords no'
+  notify: restart sshd
+
+- name: Disable remote root login
+  lineinfile:
+    dest: "/etc/ssh/sshd_config"
+    regexp: '^#?PermitRootLogin'
+    line: 'PermitRootLogin no'
+  notify: restart sshd
+
+- name: Disable password login
+  lineinfile:
+    dest: "/etc/ssh/sshd_config"
+    regexp: '^(#\s*)?PasswordAuthentication '
+    line: 'PasswordAuthentication no'
+  notify: restart sshd
+
+- name: Enable PAM
+  lineinfile:
+    dest: "/etc/ssh/sshd_config"
+    regexp: '^#?UsePAM'
+    line: 'UsePAM yes'
+  notify: restart sshd
+
+- name: Modify default port
+  lineinfile:
+    dest: "/etc/ssh/sshd_config"
+    regexp: '^#?Port 22'
+    line: 'Port 2424'
+  notify: restart sshd
+
+############################################## ZSH Everywhere
+
+- name: Install zsh and make it default
+  apt:
+    name: zsh
+    state: latest
+
+- name: Set zsh as default shell
+  become: yes
+  user:
+    name: '{{ user.username }}'
+    shell: /bin/zsh
+  with_items: '{{ users }}'
+  loop_control:
+    loop_var: user
+    label: '{{ user.username }}'
+
+- name : Copy .zshrc
+  become: yes
+  copy:
+    src: zshrc
+    dest: '~{{ user.username }}/.zshrc'
+    mode: 0644
+  with_items: '{{ users }}'
+  loop_control:
+    loop_var: user
+    label: '{{ user.username }}'
+
+############################################## Install and config tmux
+
+- name: Install and config tmux
+  become: yes
+  apt: 
+    pkg:
+      - tmux
+    update_cache: yes
+    state: latest
+
+- name : Copy .tmux.conf
+  become: yes
+  copy:
+    src: .tmux.conf
+    dest: '~{{ user.username }}/.tmux.conf'
+    mode: 0644
+  with_items: '{{ users }}'
+  loop_control:
+    loop_var: user
+    label: '{{ user.username }}'
+

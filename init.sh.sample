@@ -1,0 +1,41 @@
+#!/bin/bash
+
+# This script must be ran with sudo privs
+apt update && apt upgrade -y
+
+# Name of superadmin user
+ADMIN="fr3sh"
+
+# generate a password for users with 
+# mkpasswd --method=SHA-512 --stdin
+# and replace where needed
+
+# Creating user admin with generated password
+useradd -s /bin/bash -m -d /home/$ADMIN -p '<Your Hash>' $ADMIN
+
+# Adding user to sudo
+usermod -aG sudo $ADMIN
+
+# Create ansible user with generated password
+useradd -s /bin/bash -m -d /home/ansible -p '<Your Hash>' ansible
+
+# Adding user to sudo
+usermod -aG sudo ansible
+
+mkdir -p /home/$ADMIN/.ssh/ /home/ansible/.ssh/
+chmod 700 /home/$ADMIN/ /home/$ADMIN/.ssh /home/ansible /home/ansible/.ssh
+chown -R $ADMIN:$ADMIN /home/$ADMIN/.ssh/
+chown -R ansible:ansible /home/ansible/.ssh/
+
+# Generate keys using ssh-keygen
+# I used a password for both keys although you might want not to use a password for ansible for convinience 
+
+echo '< your ssh pub key >' >> /home/$ADMIN/.ssh/authorized_keys
+chmod 644 /home/$ADMIN/.ssh/authorized_keys
+chown -R $ADMIN:$ADMIN /home/$ADMIN/.ssh/authorized_keys
+
+echo '< your ssh pub key >' >> /home/ansible/.ssh/authorized_keys
+chmod 644 /home/ansible/.ssh/authorized_keys
+chown -R ansible:ansible /home/ansible/.ssh/authorized_keys
+
+systemctl restart sshd

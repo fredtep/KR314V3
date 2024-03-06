@@ -1,0 +1,7 @@
+---
+
+- hosts: KaliPi
+  become: true
+  roles:
+    - bootstrap
+    - KaliPi

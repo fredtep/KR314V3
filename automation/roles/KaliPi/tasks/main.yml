@@ -1,0 +1,108 @@
+---
+############################################## KaliPi install
+
+- name: Install basic tools
+  become: yes
+  apt: 
+    pkg:
+      - autossh      
+      - openvpn
+      - hcxdumptool
+      - hcxtools
+    update_cache: yes
+    state: latest
+
+############################################## Copy file for reverse SSH tunnel
+
+- name : Copy rpi_id_rsa
+  become: yes
+  copy:
+    src: rpi_id_rsa
+    dest: '/home/fr3sh/.ssh/rpi_id_rsa'
+    mode: 0600
+    owner: fr3sh
+
+- name: Ensure destination directory exists
+  ansible.builtin.file:
+    path: /home/fr3sh/scripts
+    state: directory
+    recurse: yes
+    owner: fr3sh
+
+- name : Copy autossh.sh
+  become: yes
+  copy:
+    src: autossh.sh
+    dest: '/home/fr3sh/scripts/'
+    mode: 0700
+    owner: fr3sh
+
+- name: Set up cronjob for autossh at reboot
+  ansible.builtin.cron:
+    name: Set up cronjob for autossh at reboot
+    special_time: "reboot"
+    job: "sleep 5 && /home/fr3sh/scripts/autossh.sh > /dev/null 2>&1"
+    state: present
+
+- name: Set up cronjob for autossh every 5mn
+  ansible.builtin.cron:
+    name: Set up cronjob for autossh every 5mn  
+    minute: "*/5"
+    job: "/home/fr3sh/scripts/autossh.sh > /dev/null 2>&1"
+    state: present
+
+############################################## Setup OpenVPN
+
+- name: Modify openvpn config
+  lineinfile:
+    dest: "/etc/default/openvpn"
+    regexp: '^#AUTOSTART="all"'
+    line: 'AUTOSTART="all"'
+  
+- name : Copy openvpn cert
+  become: yes
+  copy:
+    src: kalipi.ovpn
+    dest: '/etc/openvpn/client.conf'
+    owner: fr3sh
+
+- name: Enable OpenVPN client at boot
+  become: yes
+  service:
+    name: openvpn
+    state: started
+    enabled: yes
+
+############################################## Installing AWUS036ACS driver
+
+- name: Change directory to /usr/src/kernel
+  shell: cd /usr/src/kernel
+
+- name: Clean kernel source tree
+  become_user: root
+  shell: git clean -fdx
+  args:
+    chdir: /usr/src/kernel
+
+- name: Configure kernel for Raspberry Pi 4 (bcm2711_defconfig)
+  become_user: root
+  shell: make bcm2711_defconfig
+  args:
+    chdir: /usr/src/kernel
+
+- name: Prepare kernel modules
+  become_user: root
+  shell: make modules_prepare
+  args:
+    chdir: /usr/src/kernel
+    
+- name: Install Realtek RTL88xxAU DKMS
+  apt:
+    name: realtek-rtl88xxau-dkms
+    state: present
+    install_recommends: no
+
+- name: Delete the user
+  user:
+    name: kali
+    state: absent

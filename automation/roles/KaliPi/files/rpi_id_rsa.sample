@@ -1,0 +1,2 @@
+#Run ssh-keygen on the rpi and copy the pub key to your attack machine
+#Then paste it here and remove the .sample

