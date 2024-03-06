@@ -62,6 +62,9 @@ That will run both playbooks :
 
 Once the playbook has been run, the port will change to 2424. If you want to use the playbook again, you can change the port in ansible.cfg
 
-## Running ansible
+## Help / To Do
 
 Feel free to help and give some ideas if you want.
+
+* Add MouseJack attack ?? 
+* Automate recon ??
