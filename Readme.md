@@ -1,3 +1,5 @@
+![](pics/KaliPi.jpg)
+
 # Kali installation on Raspberry Pi
 
 ## Download the ARM Image
